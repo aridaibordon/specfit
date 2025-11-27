@@ -14,7 +14,7 @@ class App(tk.Tk):
 
         self.title("SpecFit: a graphical interface for plasma characterization")
         self.geometry("800x600")
-        self.minsize(900, 600)
+        self.minsize(1000, 600)
 
         main_window = MainFrame(self)
         main_window.pack(fill="both", expand=True)

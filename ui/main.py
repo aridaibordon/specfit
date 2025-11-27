@@ -36,6 +36,7 @@ class MainFrame(tk.Frame):
         navegation_buttons = [
             ttk.Button(navegation_container, text="Signal postprocessing", command=lambda: self.change_main_frame("test")),
             ttk.Button(navegation_container, text="Searching tools", command=lambda: self.change_main_frame("search")),
+            ttk.Button(navegation_container, text="Manual fitting", command=lambda: self.change_main_frame("fit")),
         ]
         for button in navegation_buttons:
             button.pack(fill="x")
