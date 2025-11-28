@@ -3,6 +3,7 @@ import tkinter as tk
 from dataclasses import dataclass
 from typing import Tuple
 
+
 @dataclass
 class FrameConfig:
     frame_class: tk.Frame

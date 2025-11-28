@@ -9,40 +9,80 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ui.components import CondSlider
 
 
+plt.rcParams["figure.autolayout"] = True
+
 COND_SLIDER_CONFIG = {
     "t_elec": {"text": "Electron temperature (eV):"},
     "d_elec": {"text": "Electron density (/cc):"},
     "clength": {"text": "Characteristic plasma length (cm):"},
 }
 
-class FitFrame(tk.Frame):
+class TestFitFrame(tk.Frame):
     def __init__(self, parent: tk.Frame):
         super().__init__(parent)
 
-        self.fig, self.ax = plt.subplots(figsize=(10, 10), tight_layout=True)
+        self.fig, self.ax = plt.subplots(figsize=(3, 2))
         self.text = self.ax.text(
             0.02, 0.98, s="", transform=self.ax.transAxes, ha="left", va="top"
         )
         
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure((0, 1), weight=1)
+
         # Canvas container
-        canvas_container = tk.Frame(self, bg="blue")
+        canvas_container = tk.Frame(self)
+        canvas_container.grid(column=0, row=0)
 
         self.canvas = FigureCanvasTkAgg(self.fig, canvas_container)
+        self.canvas.get_tk_widget().pack()
 
-        canvas_lower_container = tk.Frame(canvas_container)
-        canvas_checkbox_container = tk.Frame(canvas_lower_container)
+        canvas_options = tk.Frame(canvas_container)
+        canvas_checkbox = tk.Frame(canvas_options)
 
         self.xscale_log = tk.BooleanVar(value=False)
         self.yscale_log = tk.BooleanVar(value=False)
 
         checkbox_xscale = ttk.Checkbutton(
-            canvas_checkbox_container,
+            canvas_checkbox,
             variable=self.xscale_log,
             text="x log scale",
             command=self.update_scale,
         )
         checkbox_yscale = ttk.Checkbutton(
-            canvas_checkbox_container,
+            canvas_checkbox,
+            variable=self.yscale_log,
+            text="y log scale",
+            command=self.update_scale,
+        )
+
+        save_fig_button = ttk.Button(
+            canvas_options, text="Save figure", command=self.save_fig
+        )
+
+        canvas_options.pack(fill="x", padx=10)
+        canvas_options.grid_columnconfigure((0, 1), weight=1)
+
+        canvas_checkbox.grid(column=0, row=0, sticky="w")
+        checkbox_xscale.pack(side=tk.LEFT)
+        checkbox_yscale.pack(side=tk.LEFT, padx=5)
+        save_fig_button.grid(column=1, row=0, sticky="e")
+
+        return
+
+        canvas_lower_container = tk.Frame(canvas_container)
+        canvas_checkbox = tk.Frame(canvas_lower_container)
+
+        self.xscale_log = tk.BooleanVar(value=False)
+        self.yscale_log = tk.BooleanVar(value=False)
+
+        checkbox_xscale = ttk.Checkbutton(
+            canvas_checkbox,
+            variable=self.xscale_log,
+            text="x log scale",
+            command=self.update_scale,
+        )
+        checkbox_yscale = ttk.Checkbutton(
+            canvas_checkbox,
             variable=self.yscale_log,
             text="y log scale",
             command=self.update_scale,
@@ -58,7 +98,7 @@ class FitFrame(tk.Frame):
         self.canvas.get_tk_widget().grid(column=0, row=0, padx=10, pady=10)
         
         canvas_lower_container.grid(column=0, row=1)
-        canvas_checkbox_container.pack(anchor="w")
+        canvas_checkbox.pack(anchor="w")
 
         # Slider container
         slider_container = tk.Frame(self, bg="red")
