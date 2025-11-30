@@ -35,29 +35,28 @@ class MainFrame(tk.Frame):
         navegation_buttons = [
             ttk.Button(
                 navegation_container,
+                padding=(10, 5),
                 text="Signal postprocessing",
                 command=lambda: self.change_main_frame("test"),
             ),
             ttk.Button(
                 navegation_container,
+                padding=(10, 5),
                 text="Searching tools",
                 command=lambda: self.change_main_frame("search"),
             ),
             ttk.Button(
                 navegation_container,
+                padding=(10, 5),
                 text="Manual fitting",
                 command=lambda: self.change_main_frame("fit"),
             ),
         ]
         for button in navegation_buttons:
-            button.pack(fill="x")
-        
+            button.pack(fill="x", pady=2)
+
         # Main frame
-        self.main_container = tk.Frame(self)
-
-        self.main_frame = FRAMES_DICT[DEFAULT_FRAME](self.main_container)
-        self.main_frame.pack(padx=10, pady=10, expand=True, fill="both")
-
+        self.main_frame = FRAMES_DICT[DEFAULT_FRAME](self)
         self.current_frame = DEFAULT_FRAME
 
         # LAYOUT
@@ -65,8 +64,7 @@ class MainFrame(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         navegation_menu.grid(column=0, row=0, sticky="n")
-        self.main_container.grid(column=1, row=0, sticky="nwse")
-
+        self.main_frame.grid(column=1, row=0, sticky="nwse")
 
     def change_main_frame(self, next) -> None:
         if self.current_frame == next:
@@ -74,7 +72,7 @@ class MainFrame(tk.Frame):
 
         self.main_frame.destroy()
 
-        self.main_frame: tk.Frame = FRAMES_DICT[next](self.main_container)
-        self.main_frame.pack(padx=10, pady=10, expand=True, fill="both")
+        self.main_frame: tk.Frame = FRAMES_DICT[next](self)
+        self.main_frame.grid(column=1, row=0, sticky="nwse")
 
         self.current_frame = next
