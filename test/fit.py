@@ -12,7 +12,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import config
 
 from logic.database import DatabaseReader_ABAKO
-from ui.components import CondSlider
+from ui.components import TitledFrame, LabeledSlider
 
 
 SLIDERS_CONFIG = {
@@ -37,15 +37,15 @@ SLIDERS_CONFIG = {
 TAB_TEV = np.linspace(1, 20, 10)
 
 
-class TestFitFrame(tk.Frame):
+class TestFitFrame(TitledFrame):
     def __init__(self, parent: tk.Frame):
-        super().__init__(parent)
+        super().__init__(parent, title="Manual fitting")
 
         self.db = self.load_database()
 
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=2, uniform="fit_frame")
-        self.grid_rowconfigure(1, weight=1, uniform="fit_frame")
+        self.container.grid_columnconfigure(0, weight=1)
+        self.container.grid_rowconfigure(0, weight=3, uniform="fit_frame")
+        self.container.grid_rowconfigure(1, weight=2, uniform="fit_frame")
 
         self.create_figure()
         self.create_canvas()
@@ -80,8 +80,8 @@ class TestFitFrame(tk.Frame):
         self.ax.set_ylabel("Intensity (arb. units)")
 
     def create_canvas(self) -> None:
-        canvas_container = tk.Frame(self)
-        canvas_container.grid(column=0, row=0, padx=150, pady=50, sticky="nwes")
+        canvas_container = tk.Frame(self.container)
+        canvas_container.grid(column=0, row=0, sticky="nwes", padx=100)
 
         self.canvas = FigureCanvasTkAgg(self.fig, canvas_container)
         self.canvas.get_tk_widget().pack(expand=True, fill="both")
@@ -118,20 +118,20 @@ class TestFitFrame(tk.Frame):
         save_fig_button.grid(column=1, row=0, sticky="e")
 
     def create_manager(self) -> None:
-        manager_container = ttk.Frame(self)
-        manager_container.grid(column=0, row=1, sticky="we", padx=150)
+        manager_container = ttk.Frame(self.container)
+        manager_container.grid(column=0, row=1, sticky="we", padx=100)
 
         manager_container_label = ttk.Label(manager_container, text="Options manager")
         manager_container_label.pack(fill="x")
 
-        manager_grid_container = ttk.Frame(
-            manager_container, borderwidth=2, relief="solid"
-        )
+        manager_grid_container = ttk.Frame(manager_container)
         manager_grid_container.pack(expand=True, fill="both")
 
         manager_grid_container.grid_rowconfigure(0, weight=1, uniform="mg_container")
         manager_grid_container.grid_rowconfigure(1, weight=2, uniform="mg_container")
-        manager_grid_container.grid_columnconfigure((0, 1), weight=1, uniform="mg_container")
+        manager_grid_container.grid_columnconfigure(
+            (0, 1, 2), weight=1, uniform="mg_container"
+        )
 
         sample_selector_container = tk.Frame(manager_grid_container)
         sample_selector_container.grid(column=0, row=0, sticky="nwes")
@@ -151,8 +151,8 @@ class TestFitFrame(tk.Frame):
         )
         self.sample_selector.set(1)
 
-        sample_selector_label.pack(side=tk.LEFT, padx=10, pady=5)
-        self.sample_selector.pack(side=tk.LEFT, padx=10, pady=5)
+        sample_selector_label.pack(side=tk.LEFT, padx=10)
+        self.sample_selector.pack(side=tk.LEFT, padx=10)
 
         geometry_selector_container = tk.Frame(manager_grid_container)
         geometry_selector_container.grid(column=1, row=0, sticky="nwes")
@@ -160,37 +160,62 @@ class TestFitFrame(tk.Frame):
         geometry_selector_center = tk.Frame(geometry_selector_container)
         geometry_selector_center.pack(expand=True)
 
-        geometry_selector_label = ttk.Label(
-            geometry_selector_center, text="Geometry: "
-        )
+        geometry_selector_label = ttk.Label(geometry_selector_center, text="Geometry: ")
         self.geometry_selector = ttk.Combobox(
             geometry_selector_center,
             width=10,
             values=["Cylindrical", "Spherical", "Planar"],
+            justify="center"
+        )
+        self.geometry_selector.current(2)
+
+        geometry_selector_label.pack(side=tk.LEFT, padx=10)
+        self.geometry_selector.pack(side=tk.LEFT, padx=10)
+
+        mc_selector_container = tk.Frame(manager_grid_container)
+        mc_selector_container.grid(column=2, row=0, sticky="nwes")
+
+        mc_selector_center = tk.Frame(mc_selector_container)
+        mc_selector_center.pack(expand=True)
+
+        self.mc_val = tk.BooleanVar(value=False)
+        mc_selector_label = ttk.Label(mc_selector_center, text="Assume mass conservation: ")
+        mc_selector = ttk.Checkbutton(
+            mc_selector_center,
+            variable=self.mc_val,
+            command=self.update_mass_conservation,
         )
 
-        geometry_selector_label.pack(side=tk.LEFT, padx=10, pady=5)
-        self.geometry_selector.pack(side=tk.LEFT, padx=10, pady=5)
+        mc_selector_label.pack(side=tk.LEFT, padx=10)
+        mc_selector.pack(side=tk.LEFT, padx=10)
 
         slider_container = tk.Frame(manager_grid_container)
-        slider_container.grid(column=0, row=1, columnspan=2, sticky="nwes", pady=5)
+        slider_container.grid(column=0, row=1, columnspan=3, sticky="nwes", pady=5)
 
         slider_container_center = tk.Frame(slider_container)
         slider_container_center.pack(expand=True)
 
-        self.slider: Dict[str, ttk.Scale] = {}
+        self.slider: Dict[str, LabeledSlider] = {}
         for ind, key in enumerate(SLIDERS_CONFIG):
-            slider_label = ttk.Label(slider_container_center, text=SLIDERS_CONFIG[key]["text"])
-            slider = ttk.Scale(
+            labeled_slider = LabeledSlider(
                 slider_container_center,
+                text=SLIDERS_CONFIG[key]["text"],
                 length=250,
                 to=len(TAB_TEV) - 1,
                 command=lambda val: self.update_canvas(),
             )
-            self.slider[key] = slider
+            self.slider[key] = labeled_slider
 
-            slider_label.grid(row=ind, column=0, padx=10, pady=5, sticky="w")
-            slider.grid(row=ind, column=1, padx=10, pady=5, sticky="e")
+            labeled_slider.label.grid(row=ind, column=0, padx=10, pady=5, sticky="w")
+            labeled_slider.slider.grid(row=ind, column=1, padx=10, pady=5, sticky="e")
+
+    def update_mass_conservation(self):
+        if self.mc_val.get():
+            self.slider["clength"].label.grid_remove()
+            self.slider["clength"].slider.grid_remove()
+        else:
+            self.slider["clength"].label.grid()
+            self.slider["clength"].slider.grid()
 
     def update_canvas(self):
         self.update_cond_label()
@@ -198,16 +223,16 @@ class TestFitFrame(tk.Frame):
 
     def update_cond_label(self) -> None:
         text_attr = []
-        for attr, slider in self.slider.items():
+        for attr, labeled_slider in self.slider.items():
             tab_val = TAB_TEV
-            attr_val = tab_val[round(slider.get())]
+            attr_val = tab_val[round(labeled_slider.slider.get())]
 
             sym, unit = SLIDERS_CONFIG[attr]["tex_symbol"], SLIDERS_CONFIG[attr]["unit"]
             fmt = f"{attr_val:.2e}" if attr == "d_elec" else f"{attr_val:.2f}"
 
             text_attr.append(f"${sym} =$ {fmt} {unit}")
 
-        s = f"Sample {self.sample_selector.get()}: " + ", ".join(text_attr)
+        s = f"sample {self.sample_selector.get()}: " + ", ".join(text_attr)
         self.cond_label.set_text(s)
 
     def update_canvas_scale(self) -> None:

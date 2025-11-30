@@ -2,7 +2,7 @@ import tkinter as tk
 
 from tkinter import ttk
 
-from ui.frames import FRAMES_DICT
+import ui.frames as frames
 
 
 DEFAULT_FRAME = "search"
@@ -35,28 +35,35 @@ class MainFrame(tk.Frame):
         navegation_buttons = [
             ttk.Button(
                 navegation_container,
-                padding=(10, 5),
                 text="Signal postprocessing",
                 command=lambda: self.change_main_frame("test"),
             ),
             ttk.Button(
                 navegation_container,
-                padding=(10, 5),
                 text="Searching tools",
                 command=lambda: self.change_main_frame("search"),
             ),
+            # ttk.Button(
+            #     navegation_container,
+            #     text="Searching tools (mz)",
+            #     command=lambda: self.change_main_frame("multizone"),
+            # ),
             ttk.Button(
                 navegation_container,
-                padding=(10, 5),
                 text="Manual fitting",
                 command=lambda: self.change_main_frame("fit"),
             ),
+            ttk.Button(
+                navegation_container,
+                text="Configuration",
+                command=lambda: self.change_main_frame("config"),
+            ),
         ]
         for button in navegation_buttons:
-            button.pack(fill="x", pady=2)
+            button.pack(fill="x")
 
         # Main frame
-        self.main_frame = FRAMES_DICT[DEFAULT_FRAME](self)
+        self.main_frame = frames.FRAMES_DICT[DEFAULT_FRAME](self)
         self.current_frame = DEFAULT_FRAME
 
         # LAYOUT
@@ -64,7 +71,7 @@ class MainFrame(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         navegation_menu.grid(column=0, row=0, sticky="n")
-        self.main_frame.grid(column=1, row=0, sticky="nwse")
+        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=50, pady=20)
 
     def change_main_frame(self, next) -> None:
         if self.current_frame == next:
@@ -72,7 +79,7 @@ class MainFrame(tk.Frame):
 
         self.main_frame.destroy()
 
-        self.main_frame: tk.Frame = FRAMES_DICT[next](self)
-        self.main_frame.grid(column=1, row=0, sticky="nwse")
+        self.main_frame: tk.Frame = frames.FRAMES_DICT[next](self)
+        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=50, pady=20)
 
         self.current_frame = next

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tkinter import filedialog, ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from ui.components import CondSlider
+from ui.components import LabeledSlider
 
 
 COND_SLIDER_CONFIG = {
@@ -14,6 +14,7 @@ COND_SLIDER_CONFIG = {
     "d_elec": {"text": "Electron density (/cc):"},
     "clength": {"text": "Characteristic plasma length (cm):"},
 }
+
 
 class FitFrame(tk.Frame):
     def __init__(self, parent: tk.Frame):
@@ -23,7 +24,7 @@ class FitFrame(tk.Frame):
         self.text = self.ax.text(
             0.02, 0.98, s="", transform=self.ax.transAxes, ha="left", va="top"
         )
-        
+
         # Canvas container
         canvas_container = tk.Frame(self, bg="blue")
 
@@ -53,10 +54,10 @@ class FitFrame(tk.Frame):
 
         checkbox_xscale.grid(column=0, row=0, sticky="w")
         checkbox_yscale.grid(column=1, row=0)
-#        save_fig_button.pack(side=tk.RIGHT)
+        #        save_fig_button.pack(side=tk.RIGHT)
 
         self.canvas.get_tk_widget().grid(column=0, row=0, padx=10, pady=10)
-        
+
         canvas_lower_container.grid(column=0, row=1)
         canvas_checkbox_container.pack(anchor="w")
 
