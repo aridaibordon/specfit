@@ -1,6 +1,6 @@
 import logging
 
-from typing import Dict
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +11,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import config
 
-from logic.database import DatabaseReader_ABAKO
+from logic.database import SpecFitDatabase
 from ui.components import TitledFrame, LabeledSlider
 
 
@@ -42,6 +42,7 @@ class TestFitFrame(TitledFrame):
         super().__init__(parent, title="Manual fitting")
 
         self.db = self.load_database()
+        self.tab = self.db.get_data_tables()
 
         self.container.grid_columnconfigure(0, weight=1)
         self.container.grid_rowconfigure(0, weight=3, uniform="fit_frame")
@@ -62,10 +63,10 @@ class TestFitFrame(TitledFrame):
             logging.warning("Database is not specified in configuration file.")
             return
 
-        return DatabaseReader_ABAKO(db_path)
+        return SpecFitDatabase(db_path)
 
     def create_figure(self) -> None:
-        self.fig, self.ax = plt.subplots(figsize=(3, 2), tight_layout=True)
+        self.fig, self.ax = plt.subplots(figsize=(6, 4), tight_layout=True)
 
         self.cond_label = self.ax.text(
             0.5,
@@ -76,8 +77,23 @@ class TestFitFrame(TitledFrame):
             va="bottom",
         )
 
+        x_exp, y_exp = self.db.get_experimental_sample(1)
+        (self.l_sample,) = self.ax.plot(x_exp, y_exp, ".", ms=2, label="experimental data")
+
+        egrid, signal = self.db.get_synthetic_signal(
+            sample=1,
+            t_ind=0,
+            d_ind=0,
+            clenght_ind=0,
+        )
+        (self.l_fit,) = self.ax.plot(egrid, signal, lw=2, alpha=0.8, label="synthetic spectra")
+
         self.ax.set_xlabel("Photon energy (eV)")
         self.ax.set_ylabel("Intensity (arb. units)")
+
+        self.ax.set_xlim(np.min(x_exp), np.max(x_exp))
+
+        self.ax.legend()
 
     def create_canvas(self) -> None:
         canvas_container = tk.Frame(self.container)
@@ -165,7 +181,8 @@ class TestFitFrame(TitledFrame):
             geometry_selector_center,
             width=10,
             values=["Cylindrical", "Spherical", "Planar"],
-            justify="center"
+            justify="center",
+            # command=self.update_geometry --command not supported
         )
         self.geometry_selector.current(2)
 
@@ -179,11 +196,13 @@ class TestFitFrame(TitledFrame):
         mc_selector_center.pack(expand=True)
 
         self.mc_val = tk.BooleanVar(value=False)
-        mc_selector_label = ttk.Label(mc_selector_center, text="Assume mass conservation: ")
+        mc_selector_label = ttk.Label(
+            mc_selector_center, text="Assume mass conservation: "
+        )
         mc_selector = ttk.Checkbutton(
             mc_selector_center,
             variable=self.mc_val,
-            command=self.update_mass_conservation,
+            command=self.update_mc_selector,
         )
 
         mc_selector_label.pack(side=tk.LEFT, padx=10)
@@ -201,7 +220,7 @@ class TestFitFrame(TitledFrame):
                 slider_container_center,
                 text=SLIDERS_CONFIG[key]["text"],
                 length=250,
-                to=len(TAB_TEV) - 1,
+                to=len(self.tab[key]) - 1,
                 command=lambda val: self.update_canvas(),
             )
             self.slider[key] = labeled_slider
@@ -209,7 +228,11 @@ class TestFitFrame(TitledFrame):
             labeled_slider.label.grid(row=ind, column=0, padx=10, pady=5, sticky="w")
             labeled_slider.slider.grid(row=ind, column=1, padx=10, pady=5, sticky="e")
 
-    def update_mass_conservation(self):
+    def update_geometry(self):
+        print(self.geometry_selector.get())
+        config.add_entry("geometry", self.geometry_selector.get())
+
+    def update_mc_selector(self):
         if self.mc_val.get():
             self.slider["clength"].label.grid_remove()
             self.slider["clength"].slider.grid_remove()
@@ -218,21 +241,35 @@ class TestFitFrame(TitledFrame):
             self.slider["clength"].slider.grid()
 
     def update_canvas(self):
+        sample = int(self.sample_selector.get())
+        t_ind, d_ind, clength_ind = self.get_current_indexes()
+
+        x_exp, y_exp = self.db.get_experimental_sample(sample)
+        egrid, signal = self.db.get_synthetic_signal(sample, t_ind, d_ind, clength_ind)
+
+        self.l_sample.set_xdata(x_exp)
+        self.l_sample.set_ydata(y_exp)
+        self.l_fit.set_xdata(egrid)
+        self.l_fit.set_ydata(signal)
+
         self.update_cond_label()
+
+        self.ax.relim()
+        self.ax.autoscale_view()
         self.canvas.draw()
 
     def update_cond_label(self) -> None:
         text_attr = []
         for attr, labeled_slider in self.slider.items():
-            tab_val = TAB_TEV
-            attr_val = tab_val[round(labeled_slider.slider.get())]
+            attr_tab = self.tab[attr]
+            attr_val = attr_tab[round(labeled_slider.slider.get())]
 
             sym, unit = SLIDERS_CONFIG[attr]["tex_symbol"], SLIDERS_CONFIG[attr]["unit"]
             fmt = f"{attr_val:.2e}" if attr == "d_elec" else f"{attr_val:.2f}"
 
             text_attr.append(f"${sym} =$ {fmt} {unit}")
 
-        s = f"sample {self.sample_selector.get()}: " + ", ".join(text_attr)
+        s = f"Sample {self.sample_selector.get()}: " + ", ".join(text_attr)
         self.cond_label.set_text(s)
 
     def update_canvas_scale(self) -> None:
@@ -241,7 +278,13 @@ class TestFitFrame(TitledFrame):
 
         self.canvas.draw()
 
-    def save_fig(self):
+    def get_current_indexes(self) -> List[int]:
+        return [
+            round(labeled_slider.slider.get())
+            for labeled_slider in self.slider.values()
+        ]
+
+    def save_fig(self) -> None:
         figname = filedialog.asksaveasfilename()
         if figname:
             self.fig.savefig(figname)

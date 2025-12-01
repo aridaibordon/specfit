@@ -9,6 +9,8 @@ from test.fit import TestFitFrame
 from test.search import TestSearchFrame
 from test.multizone import TestMultizoneFrame
 
+# from test.customtkinter import TestFitFrame
+
 
 FRAMES_DICT: Dict[str, FrameConfig] = {
     "fit": lambda parent: TestFitFrame(parent),

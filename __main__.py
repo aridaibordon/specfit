@@ -9,7 +9,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-plt.rcParams.update({"font.size": 6})
+# plt.rcParams.update({"font.size": 6})
 
 
 class App(tk.Tk):

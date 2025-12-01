@@ -5,17 +5,17 @@ from tkinter import ttk
 import ui.frames as frames
 
 
-DEFAULT_FRAME = "search"
+DEFAULT_FRAME = "fit"
 
 
 class AppMenu(tk.Menu):
     def __init__(self, root):
         super().__init__(root)
         config_menu = tk.Menu(self)
-
-        config_menu.add_cascade(label="Config", menu=self)
         config_menu.add_command(label="Select database")
         config_menu.add_command(label="Select sample")
+
+        config_menu.add_cascade(label="Config", menu=config_menu)
 
 
 class MainFrame(tk.Frame):

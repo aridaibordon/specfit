@@ -31,8 +31,8 @@ def add_entry(attr: str, val: str) -> None:
 
 def read_entry(attr: str) -> str:
     config = load()
-    if not getattr(config, attr, None):
-        logger.exception(f"Configuration file key {attr} not found")
-        return None
+    if config.get(attr):
+        return config[attr]
 
-    return config[attr]
+    logger.exception(f"Configuration file key {attr} not found")
+    return None
