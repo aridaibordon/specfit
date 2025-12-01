@@ -78,7 +78,9 @@ class TestFitFrame(TitledFrame):
         )
 
         x_exp, y_exp = self.db.get_experimental_sample(1)
-        (self.l_sample,) = self.ax.plot(x_exp, y_exp, ".", ms=2, label="experimental data")
+        (self.l_sample,) = self.ax.plot(
+            x_exp, y_exp, ".", ms=2, label="experimental data"
+        )
 
         egrid, signal = self.db.get_synthetic_signal(
             sample=1,
@@ -86,7 +88,9 @@ class TestFitFrame(TitledFrame):
             d_ind=0,
             clenght_ind=0,
         )
-        (self.l_fit,) = self.ax.plot(egrid, signal, lw=2, alpha=0.8, label="synthetic spectra")
+        (self.l_fit,) = self.ax.plot(
+            egrid, signal, lw=2, alpha=0.8, label="synthetic spectra"
+        )
 
         self.ax.set_xlabel("Photon energy (eV)")
         self.ax.set_ylabel("Intensity (arb. units)")
@@ -276,6 +280,8 @@ class TestFitFrame(TitledFrame):
         self.ax.set_xscale("log" if self.xscale_log.get() else "linear")
         self.ax.set_yscale("log" if self.yscale_log.get() else "linear")
 
+        self.ax.relim()
+        self.ax.autoscale_view()
         self.canvas.draw()
 
     def get_current_indexes(self) -> List[int]:

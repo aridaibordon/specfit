@@ -1,6 +1,7 @@
 import logging
-import tkinter as tk
+import sys
 
+import customtkinter as ctk
 import matplotlib.pyplot as plt
 
 from ui.main import MainFrame
@@ -9,10 +10,12 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-# plt.rcParams.update({"font.size": 6})
+if sys.platform == "darwin":
+    plt.rcParams.update({"font.size": 6})
+    logging.info("MacOS specific configuration loaded.")
 
 
-class App(tk.Tk):
+class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 

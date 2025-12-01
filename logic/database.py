@@ -41,13 +41,13 @@ class SpecFitDatabase:
     def get_radiative_properties(self, t_ind: int, d_ind: int):
         if self.code == "ABAKO":
             egrid, j_bb, j_bf, j_ff, _, k_bb, k_bf, k_ff, _, _, _ = np.loadtxt(
-                self.path / "database" / f"rad_{t_ind+1:03d}_{d_ind+1:03d}.txt"
+                self.path / "database" / f"rad_{t_ind + 1:03d}_{d_ind + 1:03d}.txt"
             ).T
 
             return egrid, j_bb, j_bf, j_ff, k_bb, k_bf, k_ff
 
         return np.loadtxt(
-            self.path / "database" / f"rad_{t_ind+1:03d}_{d_ind+1:03d}.txt"
+            self.path / "database" / f"rad_{t_ind + 1:03d}_{d_ind + 1:03d}.txt"
         ).T
 
     def get_synthetic_signal(

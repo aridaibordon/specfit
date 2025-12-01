@@ -1,14 +1,13 @@
+import customtkinter as ctk
 import matplotlib.pyplot as plt
-import tkinter as tk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import ttk
 
 from ui.components import TitledFrame
 
 
 class TestSearchFrame(TitledFrame):
-    def __init__(self, parent: tk.Frame):
+    def __init__(self, parent: ctk.CTkFrame):
         super().__init__(parent, title="Searching tools for plasma characterization")
 
         self.container.grid_columnconfigure(0, weight=1, uniform="search_frame")
@@ -53,47 +52,46 @@ class TestSearchFrame(TitledFrame):
         ax_d_elec.set_ylabel("Probability density")
 
     def create_manager(self):
-        manager_container = ttk.Frame(self.container)
+        manager_container = ctk.CTkFrame(self.container, fg_color="transparent")
         manager_container.grid(column=0, row=0, sticky="nwes", padx=5, pady=5)
 
-        manager_container_center = ttk.Frame(manager_container)
+        manager_container_center = ctk.CTkFrame(manager_container)
         manager_container_center.pack(expand=True)
 
-        manager_container_center.grid_columnconfigure(0, weight=1)
-        manager_container_center.grid_columnconfigure(1, weight=1)
-        manager_container_center.grid_rowconfigure(0, weight=1)
-        manager_container_center.grid_rowconfigure(1, weight=1)
-
-        sample_selector_container = tk.Frame(manager_container_center)
-        sample_selector_container.grid(column=0, row=0, padx=5)
-
-        sample_selector_label = ttk.Label(
-            sample_selector_container, text="Experimental sample: "
+        sample_selector_label = ctk.CTkLabel(
+            manager_container_center, text="Experimental sample: "
         )
-        self.sample_selector = ttk.Spinbox(
-            sample_selector_container,
-            width=2,
-            from_=1,
-            to=7,
-            command=self.update_canvas,
+        self.sample_selector = ctk.CTkComboBox(
+            manager_container_center,
+            width=200,
+            values=["Sample 1", "Sample 2", "Sample 3"],
+            justify="center",
+            command=lambda val: self.update_canvas(),
         )
-        self.sample_selector.set(1)
+        self.sample_selector.set("Sample 1")
 
-        sample_selector_label.pack(side=tk.LEFT, padx=2, pady=5)
-        self.sample_selector.pack(side=tk.LEFT, padx=2, pady=5)
+        sample_selector_label.grid(column=0, row=0, sticky="w", padx=5, pady=5)
+        self.sample_selector.grid(column=1, row=0, padx=5, pady=5)
 
-        fom_selector_container = tk.Frame(manager_container_center)
-        fom_selector_container.grid(column=1, row=0, padx=5)
+        fom_selector_label = ctk.CTkLabel(
+            manager_container_center, text="Figure-of-merit: "
+        )
+        self.fom_selector = ctk.CTkComboBox(
+            manager_container_center,
+            width=200,
+            values=["Chi-square", "Chi-square (log)"],
+            justify="center",
+            command=lambda val: self.update_canvas(),
+        )
+        self.fom_selector.set("Chi-square")
 
-        fom_selector_label = ttk.Label(fom_selector_container, text="Figure-of-merit: ")
-        self.fom_selector = ttk.Combobox(fom_selector_container, width=12, values=["Chi-square", "Chi-square (log)"], justify="center")
-        self.fom_selector.current(0)
+        fom_selector_label.grid(column=0, row=1, sticky="w", padx=5, pady=5)
+        self.fom_selector.grid(column=1, row=1, padx=5, pady=5)
 
-        fom_selector_label.pack(side=tk.LEFT, padx=2, pady=5)
-        self.fom_selector.pack(side=tk.LEFT, padx=2, pady=5)
-
-        search_button = ttk.Button(manager_container_center, text="Start exhaustive search")
-        search_button.grid(column=0, row=1, columnspan=2, pady=10)
+        search_button = ctk.CTkButton(
+            manager_container_center, text="Start exhaustive search"
+        )
+        search_button.grid(column=0, row=2, columnspan=2, pady=10, ipadx=10)
 
     def create_canvas_layout(self):
         self.canvas1 = FigureCanvasTkAgg(self.fig_chi2, self.container)
