@@ -16,7 +16,6 @@ if not CONFIG_PATH.exists():
 
 def load() -> Dict[str, str]:
     with open(CONFIG_PATH, "r") as f:
-        logger.info("Configuration file loaded")
         return json.load(f)
 
 

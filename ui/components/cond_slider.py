@@ -1,8 +1,8 @@
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk
 
 
 class LabeledSlider:
     def __init__(self, parent, text, **slider_kwargs):
-        self.label = ttk.Label(parent, text=text)
-        self.slider = ttk.Scale(parent, **slider_kwargs)
+        self.label = ctk.CTkLabel(parent, text=text)
+        self.slider = ctk.CTkSlider(parent, **slider_kwargs)
+        self.slider.set(0)

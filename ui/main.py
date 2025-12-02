@@ -4,7 +4,7 @@ import tkinter as tk
 import ui.frames as frames
 
 
-DEFAULT_FRAME = "search"
+DEFAULT_FRAME = "fit"
 
 
 class AppMenu(tk.Menu):
@@ -22,8 +22,8 @@ class MainFrame(ctk.CTkFrame):
         super().__init__(root)
 
         # App menu
-        main_menu = AppMenu(root)
-        root.config(menu=main_menu)
+        # main_menu = AppMenu(root)
+         #root.config(menu=main_menu)
 
         # Navegation menu
         navegation_menu = ctk.CTkFrame(self, fg_color="transparent")
