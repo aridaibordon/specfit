@@ -35,9 +35,6 @@ SLIDERS_CONFIG = {
     },
 }
 
-DEFAULT_GEOMETRY = "Spherical"
-config.add_entry("geometry", DEFAULT_GEOMETRY)
-
 
 class FitFrame(TitledFrame):
     def __init__(self, parent: ctk.CTkFrame):
@@ -86,7 +83,11 @@ class FitFrame(TitledFrame):
         )
 
         egrid, signal = self.db.get_synthetic_signal(
-            sample=1, t_ind=0, d_ind=0, clength_ind=0, geometry=config.read_entry("geometry")
+            sample=1,
+            t_ind=0,
+            d_ind=0,
+            clength_ind=0,
+            geometry=config.read_entry("geometry"),
         )
         (self.l_fit,) = self.ax.plot(
             egrid, signal, lw=2, alpha=0.8, label="synthetic spectra"
@@ -262,6 +263,8 @@ class FitFrame(TitledFrame):
 
     def update_canvas(self):
         sample = int(self.sample_selector.get())
+        config.add_entry("sample", sample)
+
         t_ind, d_ind, clength_ind = self.get_current_indexes()
 
         x_exp, y_exp = self.db.get_experimental_sample(sample)

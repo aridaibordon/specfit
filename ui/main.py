@@ -23,7 +23,7 @@ class MainFrame(ctk.CTkFrame):
 
         # App menu
         # main_menu = AppMenu(root)
-         #root.config(menu=main_menu)
+        # root.config(menu=main_menu)
 
         # Navegation menu
         navegation_menu = ctk.CTkFrame(self, fg_color="transparent")

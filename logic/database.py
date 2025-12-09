@@ -8,6 +8,8 @@ import numpy as np
 
 from numpy.typing import NDArray
 
+import config
+
 from logic.chi2_search import get_chi2_scale_factor
 from logic.post import apply_instrument_resolution
 
@@ -24,15 +26,15 @@ class SpecFitDatabase:
         self.path = Path(db_path)
 
         self.config = self.get_database_configuration()
+        if (self.path / "database.py").exists():
+            self.module = import_database_specific_module(self.path / "database.py")
+
         self.code = self.config["synthetic"]["code"]
         self.mass_conservation = self.config["synthetic"]["mass_conservation"]
 
         self.tab_tev = np.loadtxt(self.path / "tab_tev.txt", skiprows=0)
         self.tab_dne = np.loadtxt(self.path / "tab_dne.txt", skiprows=0)
-        if self.mass_conservation:
-            self.tab_clength = [None]
-        else:
-            self.tab_clength = np.loadtxt(self.path / "tab_clength.txt", skiprows=0)
+        self.tab_clength = np.loadtxt(self.path / "tab_clength.txt", skiprows=0)
 
         self.nsamples = self.config["lineout"]["nsamples"]
 
@@ -66,8 +68,7 @@ class SpecFitDatabase:
         t_elec, d_elec = self.tab_tev[t_ind], self.tab_dne[d_ind]
 
         if self.mass_conservation:
-            module = import_database_specific_module(self.path / "database.py")
-            clength = module.get_clength(t_elec, d_elec)
+            clength = self.module.get_clength(t_elec, d_elec)
         else:
             clength = self.tab_clength[clength_ind]
 
@@ -103,11 +104,18 @@ class SpecFitDatabase:
                 )
             )
 
-        # delta_E = self.config["synthetic"]["post"]["resolution"]
-        # signal = apply_instrument_resolution(egrid, signal, delta_E)
+        delta_E = self.config["synthetic"]["post"]["resolution"]
+        signal = apply_instrument_resolution(egrid, signal, delta_E)
 
         x_chi2, y_chi2 = self.get_experimental_sample(sample, mode="search")
         signal *= get_chi2_scale_factor(egrid, signal, x_chi2, y_chi2)
+
+        post_chi2 = self.config["synthetic"].get("post_chi2")
+        if post_chi2:
+            my_config = config.load()
+            for func_name in post_chi2:
+                func = getattr(self.module, func_name)
+                egrid, signal = func(egrid, signal, my_config)
 
         min_e, max_e = self.config["lineout"].get("photon_range")
         mask = (egrid > min_e) & (egrid < max_e)
