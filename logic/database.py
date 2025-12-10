@@ -10,8 +10,16 @@ from numpy.typing import NDArray
 
 import config
 
-from logic.chi2_search import get_chi2_scale_factor
 from logic.post import apply_instrument_resolution
+
+
+def load_database(db_path: str):
+    return SpecFitDatabase(db_path)
+
+
+def get_chi2_scale_factor(x, y, x_sample, y_sample):
+    y = np.interp(x_sample, x, y)
+    return np.sum(y * y_sample) / np.sum(y**2)
 
 
 def import_database_specific_module(fpath: str):

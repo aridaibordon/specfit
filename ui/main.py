@@ -1,20 +1,12 @@
 import customtkinter as ctk
 import tkinter as tk
 
+import config
+
 import ui.frames as frames
 
 
-DEFAULT_FRAME = "fit"
-
-
-class AppMenu(tk.Menu):
-    def __init__(self, root):
-        super().__init__(root)
-        config_menu = tk.Menu(self)
-        config_menu.add_command(label="Select database")
-        config_menu.add_command(label="Select sample")
-
-        self.add_cascade(label="Config", menu=config_menu)
+DEFAULT_FRAME = "search"
 
 
 class MainFrame(ctk.CTkFrame):
@@ -22,37 +14,32 @@ class MainFrame(ctk.CTkFrame):
         super().__init__(root)
 
         # App menu
-        # main_menu = AppMenu(root)
-        # root.config(menu=main_menu)
+        main_menu = tk.Menu(root)
+        config_menu = tk.Menu(main_menu, tearoff=0)
+        config_menu.add_command(label="Select database", command=self.select_database)
+
+        main_menu.add_cascade(label="Config", menu=config_menu)
+
+        root.config(menu=main_menu)
 
         # Navegation menu
         navegation_menu = ctk.CTkFrame(self, fg_color="transparent")
 
         navegation_buttons = [
-            # ctk.CTkButton(
-            #     navegation_menu,
-            #     text="Signal postprocessing",
-            #     command=lambda: self.change_main_frame("test"),
-            # ),
             ctk.CTkButton(
                 navegation_menu,
                 text="Searching tools",
-                command=lambda: self.change_main_frame("search"),
+                command=lambda: self.update_main_frame("search"),
             ),
-            # ctk.CTkButton(
-            #     navegation_container,
-            #     text="Searching tools (mz)",
-            #     command=lambda: self.change_main_frame("multizone"),
-            # ),
             ctk.CTkButton(
                 navegation_menu,
                 text="Manual fitting",
-                command=lambda: self.change_main_frame("fit"),
+                command=lambda: self.update_main_frame("fit"),
             ),
             ctk.CTkButton(
                 navegation_menu,
                 text="Configuration",
-                command=lambda: self.change_main_frame("config"),
+                command=lambda: self.update_main_frame("config"),
             ),
         ]
         for button in navegation_buttons:
@@ -62,15 +49,23 @@ class MainFrame(ctk.CTkFrame):
         self.main_frame = frames.FRAMES_DICT[DEFAULT_FRAME](self)
         self.current_frame = DEFAULT_FRAME
 
-        # LAYOUT
+        # FRAME LAYOUT
         self.grid_columnconfigure(0, minsize=200, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        navegation_menu.grid(column=0, row=0, sticky="n", padx=10, pady=10)
+        navegation_menu.grid(column=0, row=0, sticky="ns", padx=20, pady=10)
         self.main_frame.grid(column=1, row=0, sticky="nwse", padx=10, pady=10)
 
-    def change_main_frame(self, next) -> None:
-        if self.current_frame == next:
+    def select_database(self) -> None:
+        db_path = ctk.filedialog.askdirectory()
+        if not db_path or db_path == config.read_entry("db"):
+            return
+
+        config.add_entry("db", db_path)
+        self.update_main_frame(self.current_frame, redraw=True)
+
+    def update_main_frame(self, next, redraw=False) -> None:
+        if (self.current_frame == next) and not redraw:
             return
 
         self.main_frame.destroy()

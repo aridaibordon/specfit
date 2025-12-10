@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import config
 
-from logic.database import SpecFitDatabase
+from logic.database import load_database
 from ui.components import TitledFrame, LabeledSlider
 
 
@@ -40,7 +40,7 @@ class FitFrame(TitledFrame):
     def __init__(self, parent: ctk.CTkFrame):
         super().__init__(parent, title="Manual fitting")
 
-        self.db = self.load_database()
+        self.db = load_database(db_path=config.read_entry("db"))
         self.tab = self.db.get_data_tables()
 
         self.container.grid_columnconfigure(0, weight=1)
@@ -56,14 +56,6 @@ class FitFrame(TitledFrame):
 
     def __post_init__(self):
         self.update_canvas()
-
-    def load_database(self):
-        db_path = config.read_entry("db")
-        if not db_path:
-            logging.warning("Database is not specified in configuration file.")
-            return
-
-        return SpecFitDatabase(db_path)
 
     def create_figure(self) -> None:
         self.fig, self.ax = plt.subplots(figsize=(6, 4), tight_layout=True)
