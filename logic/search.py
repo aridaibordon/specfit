@@ -14,17 +14,42 @@ def get_chi2(x, y, x_sample, y_sample):
 def get_chi2_surface(sample: int, db: SpecFitDatabase):
     x_exp, y_exp = db.get_experimental_sample(sample, mode="search")
 
-    chi2_surface = np.empty(
-        shape=(
-            len(db.tab_tev),
-            len(db.tab_dne),
-            len(db.tab_clength),
+    if db.mass_conservation:
+        chi2_surface = np.empty(
+            shape=(
+                len(db.tab_tev),
+                len(db.tab_dne),
+                len(db.tab_clength),
+            )
         )
-    )
-    for (t_ind, t_elec), (d_ind, d_elec), (clength_ind, clength) in itertools.product(
-        enumerate(db.tab_tev), enumerate(db.tab_dne), enumerate(db.tab_clength)
-    ):
-        x, y = db.get_synthetic_signal(sample, t_ind, d_ind, clength_ind)
-        chi2_surface[t_ind][d_ind][clength_ind] = get_chi2(x, y, x_exp, y_exp)
+        for (
+            (t_ind, t_elec),
+            (d_ind, d_elec),
+        ) in itertools.product(
+            enumerate(db.tab_tev),
+            enumerate(db.tab_dne),
+        ):
+            x, y = db.get_synthetic_signal(sample, t_ind, d_ind, clength_ind=0)
+            chi2_surface[t_ind][d_ind] = get_chi2(x, y, x_exp, y_exp)
+
+    else:
+        chi2_surface = np.empty(
+            shape=(
+                len(db.tab_tev),
+                len(db.tab_dne),
+                len(db.tab_clength),
+            )
+        )
+        for (
+            (t_ind, t_elec),
+            (d_ind, d_elec),
+            (clength_ind, clength),
+        ) in itertools.product(
+            enumerate(db.tab_tev),
+            enumerate(db.tab_dne),
+            enumerate(db.tab_clength),
+        ):
+            x, y = db.get_synthetic_signal(sample, t_ind, d_ind, clength_ind)
+            chi2_surface[t_ind][d_ind][clength_ind] = get_chi2(x, y, x_exp, y_exp)
 
     return chi2_surface

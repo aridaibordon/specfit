@@ -92,7 +92,7 @@ class SearchFrame(TitledFrame):
         ax_d_elec.text(
             0.5,
             1.02,
-            s=f"best fit: $n_e = ${best_d_elec:.2e}$\,^{{+{np.abs(best_d_elec - ci_d_elec_upper):.2e}}}_{{-{np.abs(best_d_elec - ci_d_elec_lower):.2e}}}$ eV",
+            s=f"best fit: $n_e = ${best_d_elec:.2e}$\,^{{+{np.abs(best_d_elec - ci_d_elec_upper):.2e}}}_{{-{np.abs(best_d_elec - ci_d_elec_lower):.2e}}}$ cm$^{{-3}}$",
             transform=ax_d_elec.transAxes,
             ha="center",
             va="bottom",
@@ -116,11 +116,11 @@ class SearchFrame(TitledFrame):
         self.sample_selector = ctk.CTkComboBox(
             manager_container_center,
             width=200,
-            values=["Sample 1", "Sample 2", "Sample 3"],
+            values=[str(ind) for ind in range(1, self.db.nsamples + 1)],
             justify="center",
             command=lambda val: self.update_canvas(),
         )
-        self.sample_selector.set("Sample 1")
+        self.sample_selector.set("1")
 
         sample_selector_label.grid(column=0, row=0, sticky="w", padx=5, pady=5)
         self.sample_selector.grid(column=1, row=0, padx=5, pady=5)
@@ -143,7 +143,7 @@ class SearchFrame(TitledFrame):
         search_button = ctk.CTkButton(
             manager_container_center,
             text="Start exhaustive search",
-            command=self.load_chi2_surface,
+            command=self.start_exhaustive_search,
         )
         search_button.grid(column=0, row=2, columnspan=2, pady=10, ipadx=10)
 
@@ -164,7 +164,20 @@ class SearchFrame(TitledFrame):
         )
 
     def update_canvas(self):
-        pass
+        sample = int(self.sample_selector.get())
+        config.add_entry("sample", sample)
+
+    def start_exhaustive_search(self):
+        sample = config.read_entry("sample")
+        fpath = Path(self.db.path / "lineout" / f"s{sample}_chi2.npy")
+
+        logging.info("Computing chi2 surface. This may take some time ...")
+        chi2_surface = get_chi2_surface(sample, self.db)
+        np.save(fpath, chi2_surface)
+
+        self.nchi2_surface = chi2_surface / np.min(chi2_surface)
+
+        self.update_canvas()
 
     def load_chi2_surface(self):
         sample = config.read_entry("sample")
@@ -177,5 +190,3 @@ class SearchFrame(TitledFrame):
             np.save(fpath, chi2_surface)
 
         self.nchi2_surface = chi2_surface / np.min(chi2_surface)
-
-        self.update_canvas()

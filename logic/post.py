@@ -16,25 +16,26 @@ def apply_instrument_resolution(egrid, signal, delta_E: float):
 
     return np.convolve(signal, gaussian, mode="same")
 
+
 # def apply_instrument_resolution(egrid, signal, delta_lambda: float):
 #     # convert spectral axis to nm
 #     lgrid = h * c / egrid * 1e7
 #     lsignal = h * c / lgrid**2 * signal
-# 
+#
 #     # linearize lambda grid and signal
 #     lgrid_aux = np.linspace(min(lgrid), max(lgrid), len(lgrid))
 #     lsignal_aux = np.interp(lgrid_aux, lgrid[::-1], lsignal[::-1])
-# 
+#
 #     # apply instrumental resolution in lambda
 #     signal_conv = np.convolve(
 #         lsignal_aux,
 #         normal_dist(lgrid_aux - np.mean(lgrid_aux), 0, delta_lambda / 2.355),
 #         mode="same",
 #     )
-# 
+#
 #     # reconvert spectral axis to eV
 #     egrid_aux = h * c / lgrid_aux * 1e7
 #     esignal_aux = h * c / egrid_aux**2 * signal_conv
-# 
+#
 #     # return signal in original egrid axis
 #     return np.interp(egrid, egrid_aux[::-1], esignal_aux[::-1])

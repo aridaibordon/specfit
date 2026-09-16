@@ -68,6 +68,13 @@ class SpecFitDatabase:
 
             return egrid, j_bb, j_bf, j_ff, k_bb, k_bf, k_ff
 
+        if self.code == "ATOMIC":
+            egrid, _, _, _, j, _, _, _, k, _, _ = np.loadtxt(
+                self.path / "database" / f"rad_{t_ind + 1:03d}_{d_ind + 1:03d}.txt"
+            ).T
+
+            return egrid, j / 2, j / 2, None, k / 3, k / 3, k / 3
+
         return np.loadtxt(
             self.path / "database" / f"rad_{t_ind + 1:03d}_{d_ind + 1:03d}.txt"
         ).T
@@ -133,6 +140,7 @@ class SpecFitDatabase:
     def get_experimental_sample(
         self,
         sample: int,
+        offset: float = 0.0,
         mode: Literal["fit", "search"] = "fit",
     ):
         egrid, signal = np.loadtxt(self.path / "lineout" / f"s{sample}.txt").T
@@ -141,7 +149,7 @@ class SpecFitDatabase:
             min_e, max_e = self.config["lineout"].get("photon_range")
             mask = (egrid > min_e) & (egrid < max_e)
 
-            return egrid[mask], signal[mask]
+            return egrid[mask], signal[mask] + offset
 
         elif mode == "search":
             selected_range = self.config["lineout"].get("chi2_range")
@@ -151,6 +159,6 @@ class SpecFitDatabase:
             for emin, emax in selected_range:
                 mask = (egrid > emin) & (egrid < emax)
                 selected_energies.extend(egrid[mask])
-                selected_lines.extend(signal[mask])
+                selected_lines.extend(signal[mask] + offset)
 
             return selected_energies, selected_lines

@@ -21,8 +21,10 @@ def load() -> Dict[str, str]:
 
 def add_entry(attr: str, val: str) -> None:
     config = load()
-    config[attr] = val
+    if config.get(attr) == val:
+        return
 
+    config[attr] = val
     with open(CONFIG_PATH, "w") as f:
         logger.info(f"{attr}: {val}")
         json.dump(config, f)

@@ -1,9 +1,8 @@
-import logging
-
 from typing import Dict, List
 
 import customtkinter as ctk
 import matplotlib.pyplot as plt
+import numpy as np
 
 from customtkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -12,7 +11,6 @@ import config
 
 from logic.database import load_database
 from ui.components import TitledFrame, LabeledSlider
-
 
 SLIDERS_CONFIG = {
     "t_elec": {
@@ -69,6 +67,7 @@ class FitFrame(TitledFrame):
             va="bottom",
         )
 
+        # if self.db
         x_exp, y_exp = self.db.get_experimental_sample(1)
         (self.l_sample,) = self.ax.plot(
             x_exp, y_exp, ".", ms=2, label="experimental data"
@@ -85,12 +84,22 @@ class FitFrame(TitledFrame):
             egrid, signal, lw=2, alpha=0.8, label="synthetic spectra"
         )
 
+        if self.db.config["plot"].get("options"):
+            if self.db.config["plot"]["options"].get("show_chi2_range"):
+                self.add_chi2_range_to_canvas()
+
         self.ax.set_xlabel("Photon energy (eV)")
         self.ax.set_ylabel("Intensity (arb. units)")
 
         self.ax.set_xlim(*self.db.config["plot"]["xlim"])
 
         self.ax.legend()
+
+    def add_chi2_range_to_canvas(self):
+        chi2_range = self.db.config["lineout"].get("chi2_range")
+
+        for emin, emax in chi2_range:
+            self.ax.axvspan(emin, emax, alpha=0.2)
 
     def create_canvas(self) -> None:
         canvas_container = ctk.CTkFrame(self.container, fg_color="transparent")
@@ -101,6 +110,13 @@ class FitFrame(TitledFrame):
 
         canvas_options = ctk.CTkFrame(canvas_container, fg_color="transparent")
         canvas_checkbox = ctk.CTkFrame(canvas_options, fg_color="transparent")
+        save_data_button = ctk.CTkButton(
+            canvas_options,
+            text="Save data",
+            width=110,
+            height=18,
+            command=self.save_data,
+        )
         save_fig_button = ctk.CTkButton(
             canvas_options,
             text="Save figure",
@@ -137,7 +153,8 @@ class FitFrame(TitledFrame):
         canvas_checkbox.grid(column=0, row=0, sticky="w")
         checkbox_xscale.pack(side=ctk.LEFT)
         checkbox_yscale.pack(side=ctk.LEFT, padx=10)
-        save_fig_button.grid(column=1, row=0, sticky="e")
+        save_data_button.grid(column=1, row=0, padx=5, sticky="e")
+        save_fig_button.grid(column=2, row=0, sticky="e")
 
     def create_manager(self) -> None:
         manager_container = ctk.CTkFrame(self.container, fg_color="transparent")
@@ -172,6 +189,7 @@ class FitFrame(TitledFrame):
             command=lambda val: self.update_canvas(),
         )
         self.sample_selector.set("1")
+        config.add_entry("sample", 1)
 
         sample_selector_label.pack(side=ctk.LEFT, padx=5)
         self.sample_selector.pack(side=ctk.LEFT, padx=5)
@@ -293,8 +311,10 @@ class FitFrame(TitledFrame):
 
             text_attr.append(f"${sym} =$ {fmt} {unit}")
 
-        s = f"Sample {self.sample_selector.get()}: " + ", ".join(text_attr)
-        self.cond_label.set_text(s)
+        self.cond_label_text = f"Sample {self.sample_selector.get()}: " + ", ".join(
+            text_attr
+        )
+        self.cond_label.set_text(self.cond_label_text)
 
     def update_canvas_scale(self) -> None:
         self.ax.set_xscale("log" if self.xscale_log.get() else "linear")
@@ -310,7 +330,59 @@ class FitFrame(TitledFrame):
             for labeled_slider in self.slider.values()
         ]
 
+    def save_data(self) -> None:
+        sample = int(self.sample_selector.get())
+        t_ind, d_ind, clength_ind = self.get_current_indexes()
+        t_elec, n_elec = self.tab["t_elec"][t_ind], self.tab["d_elec"][d_ind]
+
+        x_exp, y_exp = self.db.get_experimental_sample(sample)
+        egrid, signal = self.db.get_synthetic_signal(
+            sample, t_ind, d_ind, clength_ind, self.geometry_selector.get()
+        )
+
+        folder = filedialog.askdirectory()
+        if folder:
+            np.savez(
+                f"{folder}/s{sample}_best.npz",
+                exp=(x_exp, y_exp),
+                synthetic=(egrid, signal),
+                params=(t_elec, n_elec),
+            )
+
     def save_fig(self) -> None:
+        fig_aux, ax_aux = plt.subplots(figsize=(6, 4), tight_layout=True)
+
+        ax_aux.text(
+            0.5,
+            1.04,
+            s=self.cond_label_text,
+            transform=ax_aux.transAxes,
+            ha="center",
+            va="bottom",
+        )
+
+        ax_aux.plot(
+            self.l_sample.get_xdata(),
+            self.l_sample.get_ydata(),
+            ".",
+            ms=2,
+            label="experimental data",
+        )
+        ax_aux.plot(
+            self.l_fit.get_xdata(),
+            self.l_fit.get_ydata(),
+            lw=2,
+            alpha=0.8,
+            label="synthetic spectra",
+        )
+
+        ax_aux.set_xlabel("Photon energy (eV)")
+        ax_aux.set_ylabel("Intensity (arb. units)")
+
+        ax_aux.set_xlim(*self.db.config["plot"]["xlim"])
+
+        ax_aux.legend()
+
         figname = filedialog.asksaveasfilename()
         if figname:
-            self.fig.savefig(figname)
+            fig_aux.savefig(figname)

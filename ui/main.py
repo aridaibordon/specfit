@@ -5,15 +5,14 @@ import config
 
 import ui.frames as frames
 
-
-DEFAULT_FRAME = "search"
+DEFAULT_FRAME = "fit"
 
 
 class MainFrame(ctk.CTkFrame):
     def __init__(self, root: ctk.CTk):
         super().__init__(root)
 
-        # App menu
+        # app menu
         main_menu = tk.Menu(root)
         config_menu = tk.Menu(main_menu, tearoff=0)
         config_menu.add_command(label="Select database", command=self.select_database)
@@ -22,7 +21,7 @@ class MainFrame(ctk.CTkFrame):
 
         root.config(menu=main_menu)
 
-        # Navegation menu
+        # navegation menu
         navegation_menu = ctk.CTkFrame(self, fg_color="transparent")
 
         navegation_buttons = [
@@ -45,16 +44,16 @@ class MainFrame(ctk.CTkFrame):
         for button in navegation_buttons:
             button.pack(fill="x", padx=5, pady=2, ipadx=10, ipady=2)
 
-        # Main frame
+        # main frame
         self.main_frame = frames.FRAMES_DICT[DEFAULT_FRAME](self)
         self.current_frame = DEFAULT_FRAME
 
-        # FRAME LAYOUT
+        # layout
         self.grid_columnconfigure(0, minsize=200, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         navegation_menu.grid(column=0, row=0, sticky="ns", padx=20, pady=10)
-        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=10, pady=10)
+        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=20, pady=10)
 
     def select_database(self) -> None:
         db_path = ctk.filedialog.askdirectory()
@@ -71,6 +70,6 @@ class MainFrame(ctk.CTkFrame):
         self.main_frame.destroy()
 
         self.main_frame: ctk.CTkFrame = frames.FRAMES_DICT[next](self)
-        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=0, pady=10)
+        self.main_frame.grid(column=1, row=0, sticky="nwse", padx=20, pady=10)
 
         self.current_frame = next
